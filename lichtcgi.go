@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -62,4 +64,18 @@ func (self *LichtCgi) FetchLights() ([]Light, error) {
 	}
 
 	return lights, nil
+}
+
+func encodeCommand(id, value int) string {
+	cmd := fmt.Sprintf("set %d to %d", id, value)
+
+	return url.PathEscape(cmd)
+}
+
+func (self *LichtCgi) Update(light Light) error {
+
+	cmd := encodeCommand(light.Id, light.Value)
+	_, err := http.Get(self.Url + "/cgi-bin/licht.cgi?" + cmd)
+
+	return err
 }
