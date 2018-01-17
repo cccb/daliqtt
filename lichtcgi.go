@@ -72,9 +72,9 @@ func encodeCommand(id, value int) string {
 	return url.QueryEscape(cmd)
 }
 
-func (self *LichtCgi) Update(light Light) error {
+func (self *LichtCgi) Update(id, value int) error {
 
-	cmd := encodeCommand(light.Id, light.Value)
+	cmd := encodeCommand(id, value)
 	_, err := http.PostForm(
 		self.Url+"/cgi-bin/licht.cgi?"+cmd,
 		url.Values{})

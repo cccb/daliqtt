@@ -22,7 +22,7 @@ func TestFetchLights(t *testing.T) {
 
 func TestSetLight(t *testing.T) {
 	cgi := NewLichtCgi("http://localhost:2299")
-	err := cgi.Update(Light{2, 127})
+	err := cgi.Update(2, 127)
 	if err != nil {
 		t.Log("licht.cgi stub server running?")
 		t.Error(err)
@@ -41,7 +41,7 @@ func TestSetLight(t *testing.T) {
 
 	t.Log("Success. Retrieved:", lights)
 
-	err = cgi.Update(Light{2, 23})
+	err = cgi.Update(2, 23)
 	if err != nil {
 		t.Log("licht.cgi stub server running?")
 		t.Error(err)
