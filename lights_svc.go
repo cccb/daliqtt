@@ -97,7 +97,7 @@ func (self *LightsSvc) watchServer(dispatch Dispatch) {
 		for i, nextLight := range nextLights {
 			if i >= len(self.Lights) {
 				log.Println("Interessting! A new light was installed?")
-				dispatch(LightValueUpdated(nextLight))
+				dispatch(SetLightValueSuccess(nextLight.Id, nextLight.Value))
 				continue
 			}
 
@@ -109,7 +109,7 @@ func (self *LightsSvc) watchServer(dispatch Dispatch) {
 
 			if currentLight.Value != nextLight.Value {
 				// The value has changed! Inform our fellow services.
-				dispatch(LightValueUpdated(nextLight))
+				dispatch(SetLightValueSuccess(nextLight.Id, nextLight.Value))
 			}
 		}
 
