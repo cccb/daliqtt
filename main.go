@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
@@ -37,7 +36,7 @@ func parseFlags() *Config {
 func main() {
 	ctrl := make(chan os.Signal, 1)
 
-	fmt.Println("Starting dali to mqtt bridge")
+	log.Println("Starting dali to mqtt bridge")
 
 	// Initialize configuration
 	config := parseFlags()
@@ -47,9 +46,16 @@ func main() {
 
 	// MQTT test
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
-	_, err := DialMqtt(config.Mqtt)
+	actions, dispatch, err := DialMqtt(config.Mqtt)
 	if err != nil {
 		panic(err)
+	}
+
+	for action := range actions {
+		log.Println("Incoming action:", action)
+		if action.Type == SET_LIGHT_VALUE_REQUEST {
+			dispatch(SetLightValueSuccess(23, 42))
+		}
 	}
 
 	<-ctrl

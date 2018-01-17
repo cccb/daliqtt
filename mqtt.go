@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/eclipse/paho.mqtt.golang"
 )
+
+type Dispatch func(Action) error
 
 type MqttConfig struct {
 	Host     string
@@ -63,7 +64,45 @@ func decodeMessage(msg mqtt.Message) (Action, error) {
 	return action, err
 }
 
-func DialMqtt(config *MqttConfig) (mqtt.Client, error) {
+/*
+ Encode an outgoing mqtt message payload
+*/
+func encodeMessagePayload(action Action) ([]byte, error) {
+	payload, err := json.Marshal(action.Payload)
+
+	return payload, err
+}
+
+/*
+ Create dispatch function:
+ Encode action for transport and publish to MQTT
+*/
+func makeDispatch(client mqtt.Client, baseTopic string) Dispatch {
+	dispatch := func(action Action) error {
+		// Prepare payload
+		topic := baseTopic + "/" + action.Type
+		payload, err := encodeMessagePayload(action)
+		if err != nil {
+			return err
+		}
+
+		// Send message
+		token := client.Publish(topic, 0, false, payload)
+		token.Wait()
+
+		return nil
+	}
+
+	return dispatch
+}
+
+/*
+ Connect to MQTT broker and create action channel
+ and dispatch function.
+*/
+func DialMqtt(config *MqttConfig) (chan Action, Dispatch, error) {
+	actions := make(chan Action)
+
 	opts := mqtt.NewClientOptions().
 		AddBroker(config.BrokerUri()).
 		SetClientID("daliqtt")
@@ -78,18 +117,13 @@ func DialMqtt(config *MqttConfig) (mqtt.Client, error) {
 			return
 		}
 
-		fmt.Println("Incoming action:", action)
-
-		if action.Type == SET_LIGHT_VALUE_REQUEST {
-			request := action.Payload.(LightValuePayload)
-			fmt.Println("Setting light", request.Id, "to", request.Value)
-		}
-
+		// Forward to service
+		actions <- action
 	})
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		return nil, token.Error()
+		return nil, nil, token.Error()
 	}
 
 	// Subscribe to topic
@@ -98,5 +132,8 @@ func DialMqtt(config *MqttConfig) (mqtt.Client, error) {
 		panic(token.Error())
 	}
 
-	return client, nil
+	// Create dispatch function
+	dispatch := makeDispatch(client, config.BaseTopic)
+
+	return actions, dispatch, nil
 }
