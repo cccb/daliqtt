@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/eclipse/paho.mqtt.golang"
@@ -32,6 +35,34 @@ func (config MqttConfig) BrokerUri() string {
 	return uri
 }
 
+/*
+ Decode an incoming mqtt message and create an
+ action from it's topic and payload
+*/
+func decodeMessage(msg mqtt.Message) (Action, error) {
+	// Decode topic
+	tokens := strings.Split(msg.Topic(), "/")
+	actionType := tokens[len(tokens)-1]
+
+	// Decode payload
+	var payload interface{}
+	var err error
+	switch actionType {
+	case SET_LIGHT_VALUE_REQUEST:
+		var lightValue LightValuePayload
+		err = json.Unmarshal(msg.Payload(), &lightValue)
+		payload = lightValue
+	}
+
+	// Make action
+	action := Action{
+		Type:    actionType,
+		Payload: payload,
+	}
+
+	return action, err
+}
+
 func DialMqtt(config *MqttConfig) (mqtt.Client, error) {
 	opts := mqtt.NewClientOptions().
 		AddBroker(config.BrokerUri()).
@@ -41,12 +72,19 @@ func DialMqtt(config *MqttConfig) (mqtt.Client, error) {
 	opts.SetKeepAlive(2 * time.Second)
 
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
-		fmt.Printf("TOPIC: %s\n", msg.Topic()) // String
-		fmt.Printf("MSG: %s\n", msg.Payload()) // []byte
-
-		if msg.Topic() == "fnord/FOO" {
-			client.Publish("fnord/FOO_BAM", 0, false, "foooooo")
+		action, err := decodeMessage(msg)
+		if err != nil {
+			log.Println("Error while decoding message:", err)
+			return
 		}
+
+		fmt.Println("Incoming action:", action)
+
+		if action.Type == SET_LIGHT_VALUE_REQUEST {
+			request := action.Payload.(LightValuePayload)
+			fmt.Println("Setting light", request.Id, "to", request.Value)
+		}
+
 	})
 
 	client := mqtt.NewClient(opts)
