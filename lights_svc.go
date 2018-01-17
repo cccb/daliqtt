@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 )
@@ -43,11 +44,36 @@ func (self *LightsSvc) Handle(actions chan Action, dispatch Dispatch) {
 	for action := range actions {
 		switch action.Type {
 		case SET_LIGHT_VALUE_REQUEST:
-			dispatch(SetLightValueSuccess(23, 42))
+			self.handleSetLightValue(action, dispatch)
 		case GET_LIGHT_VALUES_REQUEST:
 			dispatch(GetLightValuesSuccess(self.Lights))
 		}
 	}
+}
+
+func (self *LightsSvc) handleSetLightValue(action Action, dispatch Dispatch) {
+	// Create new light update from
+	payload := action.Payload.(LightValuePayload)
+
+	// Set light value on server
+	err := self.Cgi.Update(payload.Id, payload.Value)
+	if err != nil {
+		dispatch(SetLightValueError(err))
+		return
+	}
+
+	// Update state
+	if payload.Id >= len(self.Lights) {
+		// Huh. This should not happen.
+		dispatch(SetLightValueError(fmt.Errorf(
+			"Set light id > registered lights",
+		)))
+		return
+	}
+	self.Lights[payload.Id] = Light{payload.Id, payload.Value}
+
+	// OK
+	dispatch(SetLightValueSuccess(payload.Id, payload.Value))
 }
 
 /*
