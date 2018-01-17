@@ -69,7 +69,7 @@ func (self *LichtCgi) FetchLights() ([]Light, error) {
 func encodeCommand(id, value int) string {
 	cmd := fmt.Sprintf("set %d to %d", id, value)
 
-	return url.PathEscape(cmd)
+	return url.QueryEscape(cmd)
 }
 
 func (self *LichtCgi) Update(light Light) error {
