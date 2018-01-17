@@ -29,7 +29,6 @@ func TestSetLight(t *testing.T) {
 	}
 
 	// Read, check update
-
 	lights, err := cgi.FetchLights()
 	if err != nil {
 		t.Log("licht.cgi stub server running?")
@@ -38,6 +37,25 @@ func TestSetLight(t *testing.T) {
 
 	if lights[2].Value != 127 {
 		t.Error("Expected light 2 to be set to 127")
+	}
+
+	t.Log("Success. Retrieved:", lights)
+
+	err = cgi.Update(Light{2, 23})
+	if err != nil {
+		t.Log("licht.cgi stub server running?")
+		t.Error(err)
+	}
+
+	// Read, check update
+	lights, err = cgi.FetchLights()
+	if err != nil {
+		t.Log("licht.cgi stub server running?")
+		t.Error(err)
+	}
+
+	if lights[2].Value != 23 {
+		t.Error("Expected light 2 to be set to 23")
 	}
 
 	t.Log("Success. Retrieved:", lights)
