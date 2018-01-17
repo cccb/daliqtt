@@ -73,6 +73,9 @@ func encodeCommand(id, value int) string {
 }
 
 func (self *LichtCgi) Update(id, value int) error {
+	if value > 255 {
+		return fmt.Errorf("Value must be within 0 .. 255")
+	}
 
 	cmd := encodeCommand(id, value)
 	_, err := http.PostForm(
