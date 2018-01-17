@@ -12,7 +12,7 @@ const GET_LIGHT_VALUES_SUCCESS = "GET_LIGHT_VALUES_SUCCESS"
 const GET_LIGHT_VALUES_ERROR = "GET_LIGHT_VALUES_ERROR"
 
 // -- Events
-const LIGHT_VALUE_UPDATED = "LIGHT_VALUE_UPDATE"
+const LIGHT_VALUE_UPDATED = "LIGHT_VALUE_UPDATED"
 
 // Actions
 type Action struct {
@@ -84,5 +84,16 @@ func GetLightValuesError(err error) Action {
 	return Action{
 		Type:    GET_LIGHT_VALUES_ERROR,
 		Payload: err.Error(),
+	}
+}
+
+// Event creator
+func LightValueUpdated(light Light) Action {
+	return Action{
+		Type: LIGHT_VALUE_UPDATED,
+		Payload: LightValuePayload{
+			Id:    light.Id,
+			Value: light.Value,
+		},
 	}
 }
