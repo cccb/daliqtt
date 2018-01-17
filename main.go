@@ -9,7 +9,8 @@ import (
 )
 
 type Config struct {
-	Mqtt *MqttConfig
+	Mqtt         *MqttConfig
+	LichtCgiBase string
 }
 
 func parseFlags() *Config {
@@ -17,6 +18,10 @@ func parseFlags() *Config {
 	user := flag.String("user", "", "MQTT broker host")
 	password := flag.String("password", "", "MQTT broker host")
 	baseTopic := flag.String("topic", "dali", "MQTT base topic")
+
+	lichtCgiBase := flag.String("lichtcgi", "http://dali", "licht.cgi server")
+
+	flag.Parse()
 
 	mqttConfig := &MqttConfig{
 		Host:     *host,
@@ -27,7 +32,8 @@ func parseFlags() *Config {
 	}
 
 	config := &Config{
-		Mqtt: mqttConfig,
+		Mqtt:         mqttConfig,
+		LichtCgiBase: *lichtCgiBase,
 	}
 
 	return config
@@ -41,22 +47,17 @@ func main() {
 	// Initialize configuration
 	config := parseFlags()
 
-	lights := NewLightsState()
-	lights.Refresh()
-
-	// MQTT test
+	// Initialize MQTT connection
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
 	actions, dispatch, err := DialMqtt(config.Mqtt)
 	if err != nil {
 		panic(err)
 	}
 
-	for action := range actions {
-		log.Println("Incoming action:", action)
-		if action.Type == SET_LIGHT_VALUE_REQUEST {
-			dispatch(SetLightValueSuccess(23, 42))
-		}
-	}
+	// So far so good. Let now the lights service
+	// take over and handle requests.
+	svc := NewLightsSvc(config.LichtCgiBase)
+	go svc.Handle(actions, dispatch)
 
 	<-ctrl
 }
