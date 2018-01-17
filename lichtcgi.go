@@ -75,7 +75,9 @@ func encodeCommand(id, value int) string {
 func (self *LichtCgi) Update(light Light) error {
 
 	cmd := encodeCommand(light.Id, light.Value)
-	_, err := http.Get(self.Url + "/cgi-bin/licht.cgi?" + cmd)
+	_, err := http.PostForm(
+		self.Url+"/cgi-bin/licht.cgi?"+cmd,
+		url.Values{})
 
 	return err
 }
