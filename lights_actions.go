@@ -31,7 +31,7 @@ type LightValuesPayload []LightValuePayload
 type ErrorPayload string
 
 // Action creators
-func SetLightValueRequest(id, value, int) Action {
+func SetLightValueRequest(id, value int) Action {
 	return Action{
 		Type: SET_LIGHT_VALUE_REQUEST,
 		Payload: LightValuePayload{
