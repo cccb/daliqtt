@@ -31,6 +31,16 @@ type LightValuesPayload []LightValuePayload
 type ErrorPayload string
 
 // Action creators
+func SetLightValueRequest(id, value, int) Action {
+	return Action{
+		Type: SET_LIGHT_VALUE_REQUEST,
+		Payload: LightValuePayload{
+			Id:    id,
+			Value: value,
+		},
+	}
+}
+
 func SetLightValueSuccess(id, value int) Action {
 	return Action{
 		Type: SET_LIGHT_VALUE_SUCCESS,
@@ -45,6 +55,13 @@ func SetLightValueError(err error) Action {
 	return Action{
 		Type:    SET_LIGHT_VALUE_ERROR,
 		Payload: err.Error(),
+	}
+}
+
+func GetLightValuesRequest() Action {
+	return Action{
+		Type:    GET_LIGHT_VALUES_REQUEST,
+		Payload: nil,
 	}
 }
 
