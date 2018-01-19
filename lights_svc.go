@@ -9,6 +9,8 @@ import (
 type LightsSvc struct {
 	Lights []Light
 	Cgi    *LichtCgi
+
+	updateBuffer map[int]Light
 }
 
 func NewLightsSvc(lichtCgiBase string) *LightsSvc {
@@ -25,6 +27,8 @@ func NewLightsSvc(lichtCgiBase string) *LightsSvc {
 	svc := &LightsSvc{
 		Lights: lights,
 		Cgi:    cgi,
+
+		updateBuffer: map[int]Light{},
 	}
 
 	return svc
@@ -39,6 +43,9 @@ func (self *LightsSvc) Handle(actions chan Action, dispatch Dispatch) {
 	// Constantly poll server in case someone changed the
 	// values using the legacy web interface.
 	go self.watchServer(dispatch)
+
+	// Apply updates over HTTP at a constant rate
+	go self.applyUpdatesProc(dispatch)
 
 	// Hanlde actions
 	for action := range actions {
@@ -55,25 +62,21 @@ func (self *LightsSvc) handleSetLightValue(action Action, dispatch Dispatch) {
 	// Create new light update from
 	payload := action.Payload.(LightValuePayload)
 
-	// Set light value on server
-	err := self.Cgi.Update(payload.Id, payload.Value)
-	if err != nil {
-		dispatch(SetLightValueError(err))
-		return
-	}
-
 	// Update state
 	if payload.Id >= len(self.Lights) {
 		// Huh. This should not happen.
-		dispatch(SetLightValueError(fmt.Errorf(
+		dispatch(SetLightValueError(501, fmt.Errorf(
 			"Set light id > registered lights",
 		)))
 		return
 	}
-	self.Lights[payload.Id] = Light{payload.Id, payload.Value}
 
-	// OK
-	dispatch(SetLightValueSuccess(payload.Id, payload.Value))
+	light := Light{payload.Id, payload.Value}
+	self.Lights[payload.Id] = light
+
+	// Queue update
+	self.updateBuffer[light.Id] = light
+
 }
 
 /*
@@ -117,6 +120,33 @@ func (self *LightsSvc) watchServer(dispatch Dispatch) {
 		self.Lights = nextLights
 
 		// Repeat after some timeout
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
+	}
+}
+
+/*
+ Apply updates with a constant rate
+*/
+func (self *LightsSvc) applyUpdatesProc(dispatch Dispatch) {
+
+	for {
+		for id, light := range self.updateBuffer {
+
+			// Set light value on server
+			err := self.Cgi.Update(light.Id, light.Value)
+			if err != nil {
+				dispatch(SetLightValueError(500, err))
+				return
+			}
+
+			delete(self.updateBuffer, id)
+
+			// OK
+			dispatch(SetLightValueSuccess(light.Id, light.Value))
+
+			time.Sleep(time.Second / 15) // Limit FPS
+		}
+
+		time.Sleep(time.Second / 15) // Limit FPS
 	}
 }

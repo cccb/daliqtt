@@ -25,7 +25,10 @@ type LightValuePayload struct {
 
 type LightValuesPayload []LightValuePayload
 
-type ErrorPayload string
+type ErrorPayload struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
 
 // Action creators
 func SetLightValueRequest(id, value int) Action {
@@ -48,10 +51,13 @@ func SetLightValueSuccess(id, value int) Action {
 	}
 }
 
-func SetLightValueError(err error) Action {
+func SetLightValueError(code int, err error) Action {
 	return Action{
-		Type:    SET_LIGHT_VALUE_ERROR,
-		Payload: err.Error(),
+		Type: SET_LIGHT_VALUE_ERROR,
+		Payload: ErrorPayload{
+			Code:    code,
+			Message: err.Error(),
+		},
 	}
 }
 
