@@ -107,6 +107,7 @@ func DialMqtt(config *MqttConfig) (chan Action, Dispatch, error) {
 		AddBroker(config.BrokerUri()).
 		SetClientID("daliqtt")
 
+	opts.SetMaxReconnectInterval(15.0 * time.Second)
 	opts.SetPingTimeout(1 * time.Second)
 	opts.SetKeepAlive(2 * time.Second)
 
@@ -121,21 +122,27 @@ func DialMqtt(config *MqttConfig) (chan Action, Dispatch, error) {
 		actions <- action
 	})
 
+	opts.SetOnConnectHandler(func(client mqtt.Client) {
+		// Subscribe to topic
+		topic := config.BaseTopic + "/#"
+		if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
+			panic(token.Error())
+		}
+
+		log.Println("Subscribed to topic:", topic)
+
+		// Subscribe to meta topic
+		topic = "_meta/#"
+		if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
+			panic(token.Error())
+		}
+
+		log.Println("Subscribed to topic:", topic)
+	})
+
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		return nil, nil, token.Error()
-	}
-
-	// Subscribe to topic
-	topic := config.BaseTopic + "/#"
-	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
-
-	// Subscribe to meta topic
-	topic = "_meta/#"
-	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		panic(token.Error())
 	}
 
 	// Create dispatch function
