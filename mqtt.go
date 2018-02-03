@@ -132,6 +132,12 @@ func DialMqtt(config *MqttConfig) (chan Action, Dispatch, error) {
 		panic(token.Error())
 	}
 
+	// Subscribe to meta topic
+	topic = "_meta/#"
+	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+
 	// Create dispatch function
 	dispatch := makeDispatch(client, config.BaseTopic)
 
