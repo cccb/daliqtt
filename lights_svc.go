@@ -144,7 +144,7 @@ func (self *LightsSvc) applyUpdatesProc(dispatch Dispatch) {
 			// OK
 			dispatch(SetLightValueSuccess(light.Id, light.Value))
 
-			time.Sleep(time.Second / 10) // Limit FPS
+			time.Sleep(time.Second / 15) // Limit FPS
 		}
 	}
 }
