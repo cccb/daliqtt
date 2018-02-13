@@ -7,6 +7,8 @@ import (
 	"github.com/cameliot/alpaca"
 )
 
+var version = "unknown"
+
 type Config struct {
 	Mqtt         *MqttConfig
 	LichtCgiBase string
