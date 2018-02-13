@@ -80,5 +80,6 @@ func main() {
 			}
 		})
 
+	log.Println("Listening to: localhost:2299")
 	http.ListenAndServe("localhost:2299", nil)
 }
