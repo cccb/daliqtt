@@ -19,16 +19,16 @@ type PingPayload string
 type WhoisPayload string
 
 type PongPayload struct {
-	Handle    string    `json:"handle"`
-	Timestamp time.Time `json:"timestamp"`
+	Handle    string `json:"handle"`
+	Timestamp int64  `json:"timestamp"` // UTC Unix Timestamp in ms
 }
 
 type IamaPayload struct {
-	Handle      string    `json:"handle"` // Unique Handle e.g. dali_mainhall
-	Name        string    `json:"name"`   // Service Name e.g. dalimqtt
-	Version     string    `json:"version"`
-	Description string    `json:"description"`
-	StartedAt   time.Time `json:"started_at"`
+	Handle      string `json:"handle"` // Unique Handle e.g. dali_mainhall
+	Name        string `json:"name"`   // Service Name e.g. dalimqtt
+	Version     string `json:"version"`
+	Description string `json:"description"`
+	StartedAt   int64  `json:"started_at"` // UTC Unix Timestamp in ms
 }
 
 // Action Creators
@@ -37,7 +37,7 @@ func Pong(handle string) alpaca.Action {
 		Type: PONG,
 		Payload: PongPayload{
 			Handle:    handle,
-			Timestamp: time.Now(),
+			Timestamp: time.Now().UTC().UnixNano() / 1000000, // ms
 		},
 	}
 }
@@ -68,7 +68,7 @@ func NewMetaSvc(
 			Name:        name,
 			Version:     version,
 			Description: description,
-			StartedAt:   time.Now(),
+			StartedAt:   time.Now().UTC().UnixNano() / 1000000,
 		},
 	}
 
