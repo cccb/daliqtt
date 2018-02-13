@@ -41,7 +41,7 @@ func parseFlags() *Config {
 }
 
 func main() {
-	log.Println("Starting dali to mqtt bridge")
+	log.Println("Starting dali to mqtt bridge v.", version)
 
 	// Initialize configuration
 	config := parseFlags()
@@ -55,8 +55,26 @@ func main() {
 		},
 	)
 
+	lightsActions := make(alpaca.Actions)
+	metaActions := make(alpaca.Actions)
+
 	// So far so good. Let now the lights service
-	// take over and handle requests.
-	svc := NewLightsSvc(config.LichtCgiBase)
-	svc.Handle(actions, dispatch)
+	// handle actions
+	lightsSvc := NewLightsSvc(config.LichtCgiBase)
+	go lightsSvc.Handle(lightsActions, dispatch)
+
+	// Hanlde meta actions for service discovery
+	metaSvc := NewMetaSvc(
+		"daliqtt@mainhall",
+		"daliqtt",
+		version,
+		"Bridge Dali / Lights to MQTT",
+	)
+	go metaSvc.Handle(metaActions, dispatch)
+
+	for action := range actions {
+		lightsActions <- action
+		metaActions <- action
+	}
+
 }
