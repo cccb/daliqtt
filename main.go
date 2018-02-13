@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
 
-	"github.com/eclipse/paho.mqtt.golang"
+	"github.com/cameliot/alpaca"
 )
 
 type Config struct {
@@ -40,24 +39,22 @@ func parseFlags() *Config {
 }
 
 func main() {
-	ctrl := make(chan os.Signal, 1)
-
 	log.Println("Starting dali to mqtt bridge")
 
 	// Initialize configuration
 	config := parseFlags()
 
 	// Initialize MQTT connection
-	mqtt.ERROR = log.New(os.Stdout, "", 0)
-	actions, dispatch, err := DialMqtt(config.Mqtt)
-	if err != nil {
-		panic(err)
-	}
+	actions, dispatch := alpaca.DialMqtt(
+		config.Mqtt.BrokerUri(),
+		alpaca.Routes{
+			"lights": config.Mqtt.BaseTopic,
+			"meta":   "v1/_meta",
+		},
+	)
 
 	// So far so good. Let now the lights service
 	// take over and handle requests.
 	svc := NewLightsSvc(config.LichtCgiBase)
-	go svc.Handle(actions, dispatch)
-
-	<-ctrl
+	svc.Handle(actions, dispatch)
 }

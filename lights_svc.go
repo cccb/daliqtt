@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/cameliot/alpaca"
 )
 
 type LightsSvc struct {
@@ -38,7 +40,7 @@ func NewLightsSvc(lichtCgiBase string) *LightsSvc {
  Service main: React to incoming actions and dispatch
  responses.
 */
-func (self *LightsSvc) Handle(actions chan Action, dispatch Dispatch) {
+func (self *LightsSvc) Handle(actions alpaca.Actions, dispatch alpaca.Dispatch) {
 
 	// Constantly poll server in case someone changed the
 	// values using the legacy web interface.
@@ -58,9 +60,11 @@ func (self *LightsSvc) Handle(actions chan Action, dispatch Dispatch) {
 	}
 }
 
-func (self *LightsSvc) handleSetLightValue(action Action, dispatch Dispatch) {
+func (self *LightsSvc) handleSetLightValue(
+	action alpaca.Action, dispatch alpaca.Dispatch) {
 	// Create new light update from
-	payload := action.Payload.(LightValuePayload)
+	payload := LightValuePayload{}
+	action.DecodePayload(&payload)
 
 	// Update state
 	if payload.Id >= len(self.Lights) {
@@ -82,7 +86,7 @@ func (self *LightsSvc) handleSetLightValue(action Action, dispatch Dispatch) {
 /*
  Watch the server and dispatch events in case something changed
 */
-func (self *LightsSvc) watchServer(dispatch Dispatch) {
+func (self *LightsSvc) watchServer(dispatch alpaca.Dispatch) {
 	for {
 		nextLights, err := self.Cgi.FetchLights()
 		if err != nil {
@@ -127,7 +131,7 @@ func (self *LightsSvc) watchServer(dispatch Dispatch) {
 /*
  Apply updates with a constant rate
 */
-func (self *LightsSvc) applyUpdatesProc(dispatch Dispatch) {
+func (self *LightsSvc) applyUpdatesProc(dispatch alpaca.Dispatch) {
 
 	for {
 		for id, light := range self.updateBuffer {

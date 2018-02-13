@@ -1,21 +1,19 @@
 package main
 
+import (
+	"github.com/cameliot/alpaca"
+)
+
 // MQTT Messages
 //
 // -- Action Types
-const SET_LIGHT_VALUE_REQUEST = "SET_LIGHT_VALUE_REQUEST"
-const SET_LIGHT_VALUE_SUCCESS = "SET_LIGHT_VALUE_SUCCESS"
-const SET_LIGHT_VALUE_ERROR = "SET_LIGHT_VALUE_ERROR"
+const SET_LIGHT_VALUE_REQUEST = "@lights/SET_LIGHT_VALUE_REQUEST"
+const SET_LIGHT_VALUE_SUCCESS = "@lights/SET_LIGHT_VALUE_SUCCESS"
+const SET_LIGHT_VALUE_ERROR = "@lights/SET_LIGHT_VALUE_ERROR"
 
-const GET_LIGHT_VALUES_REQUEST = "GET_LIGHT_VALUES_REQUEST"
-const GET_LIGHT_VALUES_SUCCESS = "GET_LIGHT_VALUES_SUCCESS"
-const GET_LIGHT_VALUES_ERROR = "GET_LIGHT_VALUES_ERROR"
-
-// Actions
-type Action struct {
-	Type    string      `json:"type"`
-	Payload interface{} `json:"payload"`
-}
+const GET_LIGHT_VALUES_REQUEST = "@lights/GET_LIGHT_VALUES_REQUEST"
+const GET_LIGHT_VALUES_SUCCESS = "@lights/GET_LIGHT_VALUES_SUCCESS"
+const GET_LIGHT_VALUES_ERROR = "@lights/GET_LIGHT_VALUES_ERROR"
 
 // Payloads
 type LightValuePayload struct {
@@ -31,8 +29,8 @@ type ErrorPayload struct {
 }
 
 // Action creators
-func SetLightValueRequest(id, value int) Action {
-	return Action{
+func SetLightValueRequest(id, value int) alpaca.Action {
+	return alpaca.Action{
 		Type: SET_LIGHT_VALUE_REQUEST,
 		Payload: LightValuePayload{
 			Id:    id,
@@ -41,8 +39,8 @@ func SetLightValueRequest(id, value int) Action {
 	}
 }
 
-func SetLightValueSuccess(id, value int) Action {
-	return Action{
+func SetLightValueSuccess(id, value int) alpaca.Action {
+	return alpaca.Action{
 		Type: SET_LIGHT_VALUE_SUCCESS,
 		Payload: LightValuePayload{
 			Id:    id,
@@ -51,8 +49,8 @@ func SetLightValueSuccess(id, value int) Action {
 	}
 }
 
-func SetLightValueError(code int, err error) Action {
-	return Action{
+func SetLightValueError(code int, err error) alpaca.Action {
+	return alpaca.Action{
 		Type: SET_LIGHT_VALUE_ERROR,
 		Payload: ErrorPayload{
 			Code:    code,
@@ -61,14 +59,14 @@ func SetLightValueError(code int, err error) Action {
 	}
 }
 
-func GetLightValuesRequest() Action {
-	return Action{
+func GetLightValuesRequest() alpaca.Action {
+	return alpaca.Action{
 		Type:    GET_LIGHT_VALUES_REQUEST,
 		Payload: nil,
 	}
 }
 
-func GetLightValuesSuccess(lights []Light) Action {
+func GetLightValuesSuccess(lights []Light) alpaca.Action {
 	payload := LightValuesPayload{}
 	for _, light := range lights {
 		payload = append(payload, LightValuePayload{
@@ -77,14 +75,14 @@ func GetLightValuesSuccess(lights []Light) Action {
 		})
 	}
 
-	return Action{
+	return alpaca.Action{
 		Type:    GET_LIGHT_VALUES_SUCCESS,
 		Payload: payload,
 	}
 }
 
-func GetLightValuesError(err error) Action {
-	return Action{
+func GetLightValuesError(err error) alpaca.Action {
+	return alpaca.Action{
 		Type:    GET_LIGHT_VALUES_ERROR,
 		Payload: err.Error(),
 	}
