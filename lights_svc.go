@@ -147,8 +147,9 @@ func (self *LightsSvc) applyUpdatesProc(dispatch alpaca.Dispatch) {
 
 			// OK
 			dispatch(SetLightValueSuccess(light.Id, light.Value))
-
 			time.Sleep(time.Second / 15) // Limit FPS
 		}
+
+		time.Sleep(time.Second / 30) // Limit Updated Rate
 	}
 }
