@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/cameliot/alpaca"
+	"github.com/cameliot/alpaca/meta"
 )
 
 var version = "unknown"
@@ -64,7 +65,7 @@ func main() {
 	go lightsSvc.Handle(lightsActions, dispatch)
 
 	// Hanlde meta actions for service discovery
-	metaSvc := NewMetaSvc(
+	metaSvc := meta.NewMetaSvc(
 		"daliqtt@mainhall",
 		"daliqtt",
 		version,
