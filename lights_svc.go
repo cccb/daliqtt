@@ -96,7 +96,12 @@ func (self *LightsSvc) watchServer(dispatch alpaca.Dispatch) {
 			)
 			time.Sleep(1 * time.Second)
 
-			continue
+			// Go has sometimes an issue with the caching of the ip address or
+			// something else. As a quick and dirty fix let this service
+			// just die and let systemd restart it.
+			log.Fatal("Connecting to dali failed. Let's die.")
+
+			continue // This is never reached
 		}
 
 		// Diff with current values and dispatch
