@@ -88,7 +88,6 @@ func (self *LichtCgi) _fetchLights() ([]Light, error) {
 	if err != nil {
 		return []Light{}, err
 	}
-	log.Println("Received state:", string(body))
 
 	lights := []Light{}
 	values := strings.Split(strings.TrimSpace(string(body)), " ")
