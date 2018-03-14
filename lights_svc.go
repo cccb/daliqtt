@@ -20,7 +20,7 @@ func NewLightsSvc(lichtCgiBase string) *LightsSvc {
 	// Load initial state from server
 	cgi := NewLichtCgi(lichtCgiBase)
 
-	lights, err := cgi.FetchLights()
+	lights, err := cgi.FetchLights(5)
 	if err != nil {
 		log.Println("Could not fetch lights from server:", err)
 	}
@@ -88,13 +88,12 @@ func (self *LightsSvc) handleSetLightValue(
 */
 func (self *LightsSvc) watchServer(dispatch alpaca.Dispatch) {
 	for {
-		nextLights, err := self.Cgi.FetchLights()
+		nextLights, err := self.Cgi.FetchLights(10)
 		if err != nil {
 			log.Println(
 				"An error occured while fetching state from server:",
 				err,
 			)
-			time.Sleep(1 * time.Second)
 
 			// Go has sometimes an issue with the caching of the ip address or
 			// something else. As a quick and dirty fix let this service

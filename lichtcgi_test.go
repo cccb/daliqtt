@@ -7,7 +7,7 @@ import (
 func TestFetchLights(t *testing.T) {
 	t.Log("Fetching lights")
 	cgi := NewLichtCgi("http://localhost:2299")
-	lights, err := cgi.FetchLights()
+	lights, err := cgi.FetchLights(5)
 	if err != nil {
 		t.Log("licht.cgi stub server running?")
 		t.Error(err)
@@ -29,7 +29,7 @@ func TestSetLight(t *testing.T) {
 	}
 
 	// Read, check update
-	lights, err := cgi.FetchLights()
+	lights, err := cgi.FetchLights(5)
 	if err != nil {
 		t.Log("licht.cgi stub server running?")
 		t.Error(err)
@@ -48,7 +48,7 @@ func TestSetLight(t *testing.T) {
 	}
 
 	// Read, check update
-	lights, err = cgi.FetchLights()
+	lights, err = cgi.FetchLights(5)
 	if err != nil {
 		t.Log("licht.cgi stub server running?")
 		t.Error(err)
