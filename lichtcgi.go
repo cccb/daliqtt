@@ -42,7 +42,27 @@ func NewLichtCgi(url string) *LichtCgi {
 	return cgi
 }
 
-func (self *LichtCgi) FetchLights() ([]Light, error) {
+func (self *LichtCgi) FetchLights(retries int) ([]Light, error) {
+	var (
+		result []Light
+		err    error
+	)
+
+	// Sometimes the server is acting strange.
+	// Retry with some timeout until finally giving up
+	for retry := 0; retry < retries; retry++ {
+		result, err = self._fetchLights()
+		if err == nil {
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+	return result, err
+}
+
+func (self *LichtCgi) _fetchLights() ([]Light, error) {
 	res, err := http.Get(self.Url + "/cgi-bin/licht.cgi")
 	if err != nil {
 		return []Light{}, err
