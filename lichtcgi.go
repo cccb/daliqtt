@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -57,6 +59,7 @@ func (self *LichtCgi) FetchLights(retries int) ([]Light, error) {
 			break
 		}
 
+		log.Println("Retry after error while fetch state from server:", err)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -64,7 +67,19 @@ func (self *LichtCgi) FetchLights(retries int) ([]Light, error) {
 }
 
 func (self *LichtCgi) _fetchLights() ([]Light, error) {
-	res, err := http.Get(self.Url + "/cgi-bin/licht.cgi")
+
+	// As we seem to have issues with broken tcp connections,
+	// let's create a fresh client.
+	//
+	// And create a new one for each request.
+	// Even if the docs say you should reuse them.
+	tr := &http.Transport{
+		MaxIdleConns:    10,
+		IdleConnTimeout: 30 * time.Second,
+	}
+	client := &http.Client{Transport: tr}
+
+	res, err := client.Get(self.Url + "/cgi-bin/licht.cgi")
 	if err != nil {
 		return []Light{}, err
 	}
@@ -73,6 +88,7 @@ func (self *LichtCgi) _fetchLights() ([]Light, error) {
 	if err != nil {
 		return []Light{}, err
 	}
+	log.Println("Received state:", string(body))
 
 	lights := []Light{}
 	values := strings.Split(strings.TrimSpace(string(body)), " ")
